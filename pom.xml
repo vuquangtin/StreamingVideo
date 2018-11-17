@@ -1,0 +1,230 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>VideoMonitor</groupId>
+	<artifactId>VideoMonitor</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<properties>
+		<exec.mainClass>com.org.videomonitor.main.VideoMonitorSystemTrayFrame</exec.mainClass>
+		<javafx.version>2.2.67</javafx.version>
+		<fx.home>${java.home}/lib/jfxrt.jar</fx.home>
+		<javafx.tools.ant.jar>${java.home}/../lib/ant-javafx.jar</javafx.tools.ant.jar>
+		<javafx-dialogs.jar>${project.basedir}/lib/javafx-dialogs-0.0.1.jar</javafx-dialogs.jar>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<dist.dir>${project.build.directory}/diploy</dist.dir>
+		<base.dir>${project.basedir}</base.dir>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.17</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.5</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.6</version>
+		</dependency>
+		<!-- http://mvnrepository.com/artifact/joda-time/joda-time -->
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>2.9.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-java</artifactId>
+			<version>3.12.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-remote-driver</artifactId>
+			<version>3.12.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-chrome-driver</artifactId>
+			<version>3.12.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.ffpojo</groupId>
+			<artifactId>ffpojo</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.iheartradio.m3u8</groupId>
+			<artifactId>open-m3u8</artifactId>
+			<version>0.2.4</version>
+		</dependency>
+
+	</dependencies>
+	<build>
+		<resources>
+			<resource>
+				<directory>src/com/org/videomonitor/resources</directory>
+			</resource>
+			<resource>
+				<directory>src</directory>
+				<excludes>
+					<exclude>**/*.java</exclude>
+				</excludes>
+			</resource>
+		</resources>
+
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.1</version>
+					<configuration>
+						<source>${maven.compiler.source}</source>
+						<target>${maven.compiler.target}</target>
+					</configuration>
+				</plugin>
+				<plugin>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.9</version>
+					<configuration>
+						<includes>
+							<include>**/*Test.class</include>
+						</includes>
+					</configuration>
+				</plugin>
+				<plugin>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<version>1.6</version>
+					<executions>
+						<execution>
+							<id>create-temp-jar</id>
+							<phase>prepare-package</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<target xmlns:fx="javafx:com.sun.javafx.tools.ant">
+									<taskdef uri="javafx:com.sun.javafx.tools.ant"
+										resource="com/sun/javafx/tools/ant/antlib.xml"
+										classpath="${project.basedir}:${javafx.tools.ant.jar}:${fx.home}" />
+
+									<fx:jar
+										destfile="${project.build.directory}/${project.build.finalName}-temp">
+										<fx:application id="fxApp" name="${project.name}"
+											mainClass="${exec.mainClass}" />
+										<fx:fileset dir="${project.build.directory}/classes" />
+										<manifest>
+											<attribute name="Implementation-Vendor" value="${app.vendor}" />
+											<attribute name="Implementation-Title" value="${app.name}" />
+											<attribute name="Implementation-Version" value="1.0" />
+										</manifest>
+									</fx:jar>
+									<attachartifact
+										file="${project.build.directory}/${project.build.finalName}-temp.jar"
+										classifier="temp" />
+								</target>
+							</configuration>
+						</execution>
+						<execution>
+							<id>create-deployment-bundle</id>
+							<phase>install</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<target xmlns:fx="javafx:com.sun.javafx.tools.ant">
+
+									<taskdef uri="javafx:com.sun.javafx.tools.ant"
+										resource="com/sun/javafx/tools/ant/antlib.xml"
+										classpath="${project.basedir}:${javafx.tools.ant.jar}:${fx.home}" />
+
+									<fx:deploy nativeBundles="all" width="100" height="100"
+										outdir="${dist.dir}" embedJNLP="true" outfile="${project.build.finalName}"
+										verbose="true">
+
+										<fx:application name="${project.build.finalName}"
+											mainClass="${exec.mainClass}" />
+										<fx:resources>
+											<fx:fileset dir="${project.build.directory}"
+												includes="${project.build.finalName}.jar" />
+										</fx:resources>
+										<fx:info title="${project.build.finalName}" vendor="NUAXIS"
+											description="Test built from Java executable jar" />
+
+										<fx:permissions elevated="true" />
+									</fx:deploy>
+								</target>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<artifactId>maven-assembly-plugin</artifactId>
+
+					<version>2.6</version>
+					<executions>
+						<execution>
+							<id>make-assembly</id>
+							<phase>package</phase>
+							<goals>
+								<goal>single</goal>
+							</goals>
+						</execution>
+					</executions>
+					<configuration>
+						<!-- <descriptors> -->
+						<!-- <descriptor>com/socialtools/fbtarget/fua/resources/conf/jar-with-dependencies.xml</descriptor> -->
+						<!-- </descriptors> -->
+						<finalName>${project.build.finalName}</finalName>
+						<appendAssemblyId>false</appendAssemblyId>
+						<attach>false</attach>
+						<archive>
+							<manifestEntries>
+								<JavaFX-Version>${javafx.version}</JavaFX-Version>
+								<JavaFX-Application-Class>${exec.mainClass}</JavaFX-Application-Class>
+								<Main-Class>com/org/videomonitor/main/VideoMonitorSystemTrayFrame</Main-Class>
+							</manifestEntries>
+
+						</archive>
+						<descriptorRefs>
+							<descriptorRef>jar-with-dependencies</descriptorRef>
+						</descriptorRefs>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>com.org.videomonitor.main.VideoMonitorSystemTrayFrame</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
